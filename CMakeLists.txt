@@ -3,5 +3,4 @@ project(ATM C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(init init.c)
 add_executable(ATM main.c)
