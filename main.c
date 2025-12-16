@@ -1,118 +1,151 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <conio.h>
 
-int main() {
+typedef struct {
+    char num[30];
+    char pin[10];
+    double balance;
+} Account;
 
-    FILE *fp_test = fopen("accounts.txt", "w");
-    if (fp_test) {
-        fprintf(fp_test, "1234 25/25 1234 1234 5000.00\n");
-        fprintf(fp_test, "9876 01/26 4321 999 100.50\n");
-        fclose(fp_test);
-        printf("--- PLIK accounts.txt ZOSTAL STWORZONY POPRAWNIE ---\n");
+void get_hidden_input(char *buf, size_t size) {
+    size_t i = 0;
+    char ch;
+    while (i < size - 1) {
+        ch = _getch();
+        if (ch == '\r') break;
+        if (ch == '\b' && i > 0) {
+            i--;
+            printf("\b \b");
+        } else {
+            buf[i++] = ch;
+            printf("*");
+        }
+    }
+    buf[i] = '\0';
+    printf("\n");
+}
+
+int main(void) {
+    Account *tab = malloc(sizeof(Account));
+    int licznik = 0;
+    int capacity = 1;
+
+    FILE *f = fopen("accounts.txt", "r");
+    if (!f) {
+        perror("Nie mozna otworzyc pliku");
+        free(tab);
+        return 1;
     }
 
-    char nr_[30];
-    char date_[20];
-    char pin_[10];
-    char cvv_[10];
-    double balance_;
+    char *line = NULL;
+    size_t len = 0;
 
-    printf("Witaj w bankomacie. Wprowadz dane swojej karty! \n");
-
-    while (1) {
-
-        printf("\nPodaj numer karty: ");
-        fgets(nr_, 30, stdin);
-        nr_[strcspn(nr_, "\n")] = 0;
-
-        printf("Podaj date waznosci karty (MM/YY): ");
-        fgets(date_, 20, stdin);
-        date_[strcspn(date_, "\n")] = 0;
-
-        printf("Podaj PIN: ");
-        fgets(pin_, 10, stdin);
-        pin_[strcspn(pin_, "\n")] = 0;
-
-        printf("Podaj CVV: ");
-        fgets(cvv_, 10, stdin);
-        cvv_[strcspn(cvv_, "\n")] = 0;
-
-        printf("Input: '%s' '%s' '%s' %s\n", nr_, date_, pin_, cvv_);;
-
-        FILE *f = fopen("accounts.txt", "r");
-        if (!f) {
-            printf("Blad otwarcia pliku!\n");
-            return 1;
+    while (getline(&line, &len, f) != -1) {
+        if (licznik >= capacity) {
+            capacity *= 2;
+            tab = realloc(tab, capacity * sizeof(Account));
         }
 
-        char c1[30], c2[20], c3[10], c4[10];
-        double d1;
-        int flag = 0;
+        if (sscanf(line, "%29s %9s %lf", tab[licznik].num,
+                   tab[licznik].pin, &tab[licznik].balance) == 3) {
+            licznik++;
+        }
+    }
 
-        while (fscanf(f, "%29s %19s %9s %9s %lf", c1, c2, c3, c4, &d1) == 5) {
-            printf("Plik: '%s' '%s' '%s' %s\n", c1, c2, c3, c4);
-            if (strcmp(c1, nr_) == 0 && strcmp(c2, date_) == 0 && strcmp(c3, pin_) == 0 && strcmp(c4, cvv_) == 0) {
-                flag = 1;
-                balance_ = d1;
+    free(line);
+    fclose(f);
+
+    printf("Witaj w bankomacie.\n");
+
+    char num_[30], pin_[10];
+    int zalogowany_index = -1;
+
+    while (zalogowany_index == -1) {
+        printf("\nPodaj numer karty: ");
+        if (getline(&line, &len, stdin)) {
+            strncpy(num_, line, sizeof(num_)-1);
+            num_[sizeof(num_)-1] = '\0';
+            num_[strcspn(num_, "\n")] = '\0';
+        }
+
+        printf("Podaj PIN: ");
+        get_hidden_input(pin_, sizeof(pin_));
+
+        for (int i = 0; i < licznik; i++) {
+            if (strcmp(tab[i].num, num_) == 0 &&
+                strcmp(tab[i].pin, pin_) == 0) {
+                zalogowany_index = i;
                 break;
             }
         }
 
-        fclose(f);
-
-        if (flag) {
-            printf("Dane poprawne! Dostęp przyznany.\n");
-            break;
-        }
-        if (!flag) {
-            printf("Bledne dane karty! Sprobuj ponownie.\n");
+        if (zalogowany_index == -1) {
+            printf("Błędne dane karty! Spróbuj ponownie.\n");
         }
     }
 
-    while (1){
-        int wybor;
+    printf("Logowanie udane!\n");
 
-        printf("\n===== BANKOMAT =====\n");
-        printf("1. Sprawdz saldo\n");
-        printf("2. Wyplata gotowki\n");
-        printf("3. Wplata gotowki\n");
-        printf("4. Wyjscie\n");
-        printf("Wybierz opcje: ");
-        scanf("%d", &wybor);
+    int choice;
+    do {
+        printf("\n--- MENU ---\n");
+        printf("1. Sprawdź saldo\n");
+        printf("2. Wpłata\n");
+        printf("3. Wypłata\n");
+        printf("4. Wyjście\n");
+        printf("Wybierz opcję: ");
 
-        if (wybor == 1) {
-            printf("Saldo: %.2lf", balance_);
+        if (scanf("%d", &choice) != 1) {
+            while (getchar() != '\n'); // czyścimy bufor
+            printf("Niepoprawna opcja!\n");
+            continue;
         }
-        else if (wybor == 2) {
-            while (1) {
-                int ile;
-                printf("Ile gotówki chcesz wypłacić?");
-                scanf("%d", &ile);
-                if (ile <= balance_) {
-                    balance_ -= ile;
-                    printf("Wypłata udana. Nowy stan konta: %lf", balance_);
-                    break;
-                }
-                else {
-                    printf("Nie masz tyle środków na koncie!");
-                }
+
+        switch (choice) {
+            case 1:
+                printf("Saldo: %.2f\n", tab[zalogowany_index].balance);
+                break;
+            case 2: {
+                double wplata;
+                printf("Podaj kwotę do wpłaty: ");
+                scanf("%lf", &wplata);
+                tab[zalogowany_index].balance += wplata;
+                printf("Wpłacono %.2f. Nowe saldo: %.2f\n",
+                       wplata, tab[zalogowany_index].balance);
+                break;
             }
+            case 3: {
+                double wyplata;
+                printf("Podaj kwotę do wypłaty: ");
+                scanf("%lf", &wyplata);
+                if (wyplata > tab[zalogowany_index].balance) {
+                    printf("Brak wystarczających środków!\n");
+                } else {
+                    tab[zalogowany_index].balance -= wyplata;
+                    printf("Wypłacono %.2f. Nowe saldo: %.2f\n",
+                           wyplata, tab[zalogowany_index].balance);
+                }
+                break;
+            }
+            case 4:
+                printf("Do widzenia!\n");
+                break;
+            default:
+                printf("Niepoprawna opcja!\n");
         }
-        else if (wybor == 3) {
-            int ile;
-            printf("Ile gotówki chcesz wpłacić?");
-            scanf("%d", &ile);
-            balance_ += ile;
-            printf("Wpłata udana. Nowy stan konta: %lf", balance_);
+    } while (choice != 4);
+
+    f = fopen("accounts.txt", "w");
+    if (f) {
+        for (int i = 0; i < licznik; i++) {
+            fprintf(f, "%s %s %.2f\n",
+                    tab[i].num, tab[i].pin, tab[i].balance);
         }
-        else if (wybor == 4) {
-            printf("Dziękujemy za skorzystanie z naszych usług");
-            break;
-        }
-        else {
-            printf("Nieznana opcja! Podaj opcję z podanych");
-        }
+        fclose(f);
     }
 
+    free(tab);
     return 0;
 }
