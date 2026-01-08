@@ -1,0 +1,14 @@
+- dodanie historii transakcji, logowania - po każdym zalogowaniu się tworzy się plik/dodaje dane do stworzonego wcześniej 
+pliku o nazwie numer_konta.txt i zapisuje się historia operacji
+- walidacja danych:
+    - czy numery kont i piny zapisane w pliku accounts.txt są realne
+    - po wprowadzeniu danych numeru konta powinno zostać sprawdzone czy numer konta ma poprawny format - DONE
+- blokada konta po 3 nieudanych próbach logowania - dodanie dodatkowego pola do konta is_blocked - DONE
+- bezpieczne zamykanie - przechwycenie sygnału SIGINT i wywołanie jakieś funkcji sprzątającej, gdy to się stanie - przede 
+wszystkim aktualizacja salda i historii - DONE
+- dodanie ignorowania sygnałów przy zapisie plików 
+- timeout - jeżeli użytkownik nic nie zmieni przez 30 sekund to zostaje wylogowany - DONE 
+- dodanie dostępności banknotów do wydania - czytane z pliku przy starcie programu - DONE 
+- szyfrowanie plików z danymi kont - DONE
+- gdy podano nieprawidłowy pin tworzy się nowy wątek, który będzie blokował podanie pinu do tego samego numeru konta na 30 sekund - DONE
+- po wylogowaniu program nie powinien kończyć działania tylko zapisywać obecny stan kont i dalej kontynuować działanie
