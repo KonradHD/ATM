@@ -13,7 +13,53 @@
 #include "cash_manager.h"
 #include "history.h"
 
-// ... (funkcje get_hidden_input i unlock_account_thread pozostają bez zmian) ...
+void get_hidden_input(char *buf, size_t size) {
+#ifdef _WIN32
+    size_t i = 0;
+    int ch;
+    while (i < size - 1) {
+        ch = _getch();
+        if (ch == 13 || ch == 10) break;
+        if (ch == 8) { // Backspace
+            if (i > 0) { i--; printf("\b \b"); fflush(stdout); }
+        } else {
+            buf[i++] = ch;
+            printf("*"); fflush(stdout);
+        }
+    }
+    buf[i] = '\0';
+    printf("\n");
+#else
+    struct termios oldt, newt;
+    size_t i = 0;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    while (i < size - 1) {
+        ch = getchar();
+        if (ch == 127 || ch == '\b') {
+            if (i > 0) { i--; printf("\b \b"); fflush(stdout); }
+        } else if (ch == '\n' || ch == '\r') break;
+        else { buf[i++] = ch; printf("*"); fflush(stdout); }
+    }
+    buf[i] = '\0';
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    printf("\n");
+#endif
+}
+
+void *unlock_account_thread(void *arg) {
+    if (arg == NULL) return NULL;
+    int index = *((int *)arg);
+    free(arg);
+    sleep(30);
+    if (tab != NULL) {
+        tab[index].isBlocked = 0;
+    }
+    return NULL;
+}
 
 int main(void) {
     signal(SIGINT, handle_sigint);
