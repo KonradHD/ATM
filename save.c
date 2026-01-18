@@ -10,15 +10,21 @@
 void save_accounts_encrypted()
 {
     FILE *f = fopen("data/accounts.dat", "wb");
-    if (!f) return;
+    if (!f)
+        return;
 
     size_t estimated_size = licznik * 150 + 1;
     char *buffer = malloc(estimated_size);
-    if (!buffer) { fclose(f); return; }
+    if (!buffer)
+    {
+        fclose(f);
+        return;
+    }
     buffer[0] = '\0';
 
     char line[100];
-    for (int i = 0; i < licznik; i++) {
+    for (int i = 0; i < licznik; i++)
+    {
         sprintf(line, "%s %s %.2f\n", tab[i].num, tab[i].pin, tab[i].balance);
         strcat(buffer, line);
     }
@@ -41,8 +47,10 @@ void save_state()
     save_accounts_encrypted();
 
     FILE *cash_file = fopen("data/cash.txt", "w");
-    if (cash_file) {
-        for (int i = 0; i < atm_count; i++) {
+    if (cash_file)
+    {
+        for (int i = 0; i < atm_count; i++)
+        {
             fprintf(cash_file, "%d - %d\n", atm_money[i].value, atm_money[i].amount);
         }
         fclose(cash_file);

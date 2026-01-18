@@ -11,7 +11,7 @@ LIBS = -lm -lpthread
 TARGET = main.exe
 
 # Lista plików źródłowych (możesz wpisać ręcznie lub użyć wildcard)
-SRCS = main.c globals.c save.c signal_handlers.c initializers.c validations.c cash_manager.c
+SRCS = main.c globals.c save.c signal_handlers.c initializers.c validations.c cash_manager.c history.c
 # Alternatywnie automatycznie wszystkie .c: SRCS = $(wildcard *.c)
 
 # Zamiana .c na .o (pliki obiektowe)

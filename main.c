@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <termio.h>
 
 #include "globals.h"
 #include "save.h"
@@ -13,18 +14,30 @@
 #include "cash_manager.h"
 #include "history.h"
 
-void get_hidden_input(char *buf, size_t size) {
+void get_hidden_input(char *buf, size_t size)
+{
 #ifdef _WIN32
     size_t i = 0;
     int ch;
-    while (i < size - 1) {
+    while (i < size - 1)
+    {
         ch = _getch();
-        if (ch == 13 || ch == 10) break;
-        if (ch == 8) { // Backspace
-            if (i > 0) { i--; printf("\b \b"); fflush(stdout); }
-        } else {
+        if (ch == 13 || ch == 10)
+            break;
+        if (ch == 8)
+        { // Backspace
+            if (i > 0)
+            {
+                i--;
+                printf("\b \b");
+                fflush(stdout);
+            }
+        }
+        else
+        {
             buf[i++] = ch;
-            printf("*"); fflush(stdout);
+            printf("*");
+            fflush(stdout);
         }
     }
     buf[i] = '\0';
@@ -37,12 +50,26 @@ void get_hidden_input(char *buf, size_t size) {
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    while (i < size - 1) {
+    while (i < size - 1)
+    {
         ch = getchar();
-        if (ch == 127 || ch == '\b') {
-            if (i > 0) { i--; printf("\b \b"); fflush(stdout); }
-        } else if (ch == '\n' || ch == '\r') break;
-        else { buf[i++] = ch; printf("*"); fflush(stdout); }
+        if (ch == 127 || ch == '\b')
+        {
+            if (i > 0)
+            {
+                i--;
+                printf("\b \b");
+                fflush(stdout);
+            }
+        }
+        else if (ch == '\n' || ch == '\r')
+            break;
+        else
+        {
+            buf[i++] = ch;
+            printf("*");
+            fflush(stdout);
+        }
     }
     buf[i] = '\0';
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
@@ -50,25 +77,30 @@ void get_hidden_input(char *buf, size_t size) {
 #endif
 }
 
-void *unlock_account_thread(void *arg) {
-    if (arg == NULL) return NULL;
+void *unlock_account_thread(void *arg)
+{
+    if (arg == NULL)
+        return NULL;
     int index = *((int *)arg);
     free(arg);
     sleep(30);
-    if (tab != NULL) {
+    if (tab != NULL)
+    {
         tab[index].isBlocked = 0;
     }
     return NULL;
 }
 
-int main(void) {
+int main(void)
+{
     signal(SIGINT, handle_sigint);
     signal(SIGALRM, handle_timeout);
 
     init_atm_money();
     init_accounts_encrypted();
 
-    while (1) { // GŁÓWNA PĘTLA PROGRAMU
+    while (1)
+    { // GŁÓWNA PĘTLA PROGRAMU
         printf("\n=== WITAJ W BANKOMACIE ===\n");
         char num_[30], pin_[10];
         int zalogowany_index = -1;
@@ -76,27 +108,33 @@ int main(void) {
         size_t len = 0;
 
         // Logowanie
-        while (zalogowany_index == -1) {
+        while (zalogowany_index == -1)
+        {
             printf("\nPodaj numer karty (16 cyfr) lub CTRL+C aby wyjsc: ");
-            if (getline(&line, &len, stdin) == -1) exit(0);
+            if (getline(&line, &len, stdin) == -1)
+                exit(0);
             line[strcspn(line, "\n")] = '\0';
 
             int account_index = validate_card_number(line);
-            if (account_index < 0) {
+            if (account_index < 0)
+            {
                 printf("Bledny numer karty.\n");
                 continue;
             }
 
-            if (tab[account_index].isBlocked) {
+            if (tab[account_index].isBlocked)
+            {
                 printf("Konto zablokowane. Sprobuj pozniej.\n");
                 continue;
             }
 
             int tries = 0;
-            while (tries < 3) {
+            while (tries < 3)
+            {
                 printf("Podaj PIN: ");
                 get_hidden_input(pin_, sizeof(pin_));
-                if (validate_pin(pin_, account_index) == 0) {
+                if (validate_pin(pin_, account_index) == 0)
+                {
                     zalogowany_index = account_index;
                     break;
                 }
@@ -104,7 +142,8 @@ int main(void) {
                 printf("Bledny PIN. Proba %d/3\n", tries);
             }
 
-            if (zalogowany_index == -1) {
+            if (zalogowany_index == -1)
+            {
                 tab[account_index].isBlocked = 1;
                 printf("Konto zablokowane na 30s.\n");
                 int *arg = malloc(sizeof(int));
@@ -119,24 +158,31 @@ int main(void) {
 
         // Menu
         int choice = 0;
-        while (choice != 4) {
+        while (choice != 4)
+        {
             printf("\n1. Saldo 2. Wplata 3. Wyplata 4. Wyloguj: ");
             alarm(30);
-            if (scanf("%d", &choice) != 1) {
-                while (getchar() != '\n');
+            if (scanf("%d", &choice) != 1)
+            {
+                while (getchar() != '\n')
+                    ;
                 continue;
             }
             alarm(0);
 
-            if (choice == 1) printf("Saldo: %.2f\n", tab[zalogowany_index].balance);
-            else if (choice == 2) handle_deposit(zalogowany_index);
-            else if (choice == 3) handle_withdrawal(zalogowany_index);
+            if (choice == 1)
+                printf("Saldo: %.2f\n", tab[zalogowany_index].balance);
+            else if (choice == 2)
+                handle_deposit(zalogowany_index);
+            else if (choice == 3)
+                handle_withdrawal(zalogowany_index);
         }
 
         log_activity(tab[zalogowany_index].num, "Wylogowano.");
         save_state(); // Zapisujemy stan po każdym wylogowaniu
         printf("Wylogowano pomyslnie.\n");
-        while (getchar() != '\n'); // Czyszczenie bufora przed nowym logowaniem
+        while (getchar() != '\n')
+            ; // Czyszczenie bufora przed nowym logowaniem
     }
 
     return 0;
