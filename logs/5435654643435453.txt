@@ -1,1 +1,4 @@
 [Sun Jan 18 23:03:09 2026] Zalogowano do systemu.
+[Sun Jan 18 23:26:19 2026] Zalogowano do systemu.
+[Sun Jan 18 23:26:26 2026] Wyplata: -20.00. Saldo: 14.34
+[Sun Jan 18 23:26:32 2026] Wylogowano.

@@ -7,7 +7,7 @@
 #include <termio.h>
 
 #include "globals.h"
-#include "save.h"
+#include "file_manager.h"
 #include "signal_handlers.h"
 #include "initializers.h"
 #include "validations.h"
@@ -102,7 +102,7 @@ int main(void)
     while (1)
     { // GŁÓWNA PĘTLA PROGRAMU
         printf("\n=== WITAJ W BANKOMACIE ===\n");
-        char num_[30], pin_[10];
+        char pin_[10];
         int zalogowany_index = -1;
         char *line = NULL;
         size_t len = 0;

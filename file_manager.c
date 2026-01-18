@@ -4,7 +4,7 @@
 #include <signal.h>
 
 #include "globals.h"
-#include "save.h"
+#include "file_manager.h"
 #include "initializers.h"
 
 void save_accounts_encrypted()
