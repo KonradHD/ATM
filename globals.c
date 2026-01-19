@@ -6,3 +6,4 @@ int atm_count = 0; // Licznik wczytanych nominałów
 
 Account *tab = NULL;
 int licznik = 0;
+int current_user_index = -1;
