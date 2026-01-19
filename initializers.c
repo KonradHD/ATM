@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "globals.h"
+#include "encryption_tools.h"
+#include "validations.h"
 
 #define SECRET_KEY "PRIVATE_KEY"
 
@@ -43,11 +45,29 @@ void init_accounts()
         if (sscanf(line, "%29s %9s %lf", tab[licznik].num,
                    tab[licznik].pin, &tab[licznik].balance) == 3)
         {
+
+            if (check_luhn(tab[licznik].num, 0) < 0)
+            {
+                printf("Błędny numer karty z wczytanych danych (Luhn fail): %s\n", tab[licznik].num);
+                tab[licznik].isBlocked = 1;
+                continue;
+                ; // Przejdź do następnej linii w pliku, nie zwiększaj licznika
+            }
+
+            // Sprawdzenie poprawności PINu
+            if (validate_pin(tab[licznik].pin, licznik) < 0)
+            {
+                printf("Błędny PIN (Format fail) dla karty %s\n", tab[licznik].num);
+                tab[licznik].isBlocked = 1;
+                continue; // Przejdź do następnej linii, nie zwiększaj licznika
+            }
+
             tab[licznik].isBlocked = 0;
             licznik++;
         }
     }
 
+    printf("Wczytano %d kont.", licznik);
     free(line);
     fclose(f);
 }
@@ -138,6 +158,102 @@ void init_accounts_encrypted()
             }
         }
         free(buffer);
+    }
+    else
+    {
+        fclose(f);
+    }
+}
+
+void init_accounts_aes()
+{
+    // 1. Wczytaj Klucz i IV
+    unsigned char key[KEY_SIZE];
+    unsigned char iv[IV_SIZE];
+
+    if (load_key_iv_from_file(DEFAULT_KEY_PATH, key, iv) != 0)
+    {
+        fprintf(stderr, "Błąd: Nie można wczytać kluczy szyfrujących.\n");
+        return;
+    }
+
+    // 2. Otwórz plik z danymi (zaszyfrowany)
+    FILE *f = fopen(ACCOUNTS_FILE_PATH, "rb"); // Tryb binarny jest kluczowy!
+    if (!f)
+        return;
+
+    fseek(f, 0, SEEK_END);
+    long file_size = ftell(f);
+    rewind(f);
+
+    if (file_size > 0)
+    {
+        // Alokacja pamięci na dane ZASZYFROWANE
+        unsigned char *encrypted_buffer = malloc(file_size);
+        fread(encrypted_buffer, 1, file_size, f);
+        fclose(f);
+
+        // Alokacja pamięci na dane ODSZYFROWANE (tekst jawny)
+        // Rozmiar będzie taki sam lub mniejszy (padding), +1 na null terminator dla stringa
+        unsigned char *decrypted_buffer = malloc(file_size + 1);
+
+        // 3. Deszyfrowanie
+        int decrypted_len = aes_decrypt(encrypted_buffer, file_size, key, iv, decrypted_buffer);
+
+        if (decrypted_len == -1)
+        {
+            fprintf(stderr, "Błąd deszyfrowania danych (zły klucz lub uszkodzony plik).\n");
+            free(encrypted_buffer);
+            free(decrypted_buffer);
+            return;
+        }
+
+        // Dodajemy znak końca stringa, aby sscanf działał poprawnie
+        decrypted_buffer[decrypted_len] = '\0';
+
+        // Już nie potrzebujemy zaszyfrowanych danych
+        free(encrypted_buffer);
+
+        // 4. Parsowanie (SSCANF na odszyfrowanym buforze)
+        char *cursor = (char *)decrypted_buffer;
+        int offset;
+        int capacity = 1;
+
+        // Jeśli tab nie jest jeszcze zainicjowana
+        if (tab == NULL)
+        {
+            tab = malloc(sizeof(Account));
+        }
+
+        while (sscanf(cursor, "%29s %9s %lf%n",
+                      tab[licznik].num,
+                      tab[licznik].pin,
+                      &tab[licznik].balance,
+                      &offset) == 3)
+        {
+            tab[licznik].isBlocked = 0;
+            cursor += offset;
+            licznik++;
+
+            if (licznik >= capacity)
+            {
+                capacity *= 2;
+                // Ważne: realloc może zmienić adres pamięci, trzeba przypisać wynik
+                Account *temp = realloc(tab, capacity * sizeof(Account));
+                if (temp)
+                {
+                    tab = temp;
+                }
+                else
+                {
+                    // Obsługa błędu braku pamięci
+                    fprintf(stderr, "Błąd alokacji pamięci!\n");
+                    break;
+                }
+            }
+        }
+
+        free(decrypted_buffer);
     }
     else
     {

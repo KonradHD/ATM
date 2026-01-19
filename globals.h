@@ -20,4 +20,10 @@ extern int licznik;
 
 extern Cash *atm_money;
 extern Account *tab;
+
+#define KEY_SIZE 32
+#define IV_SIZE 16
+#define DEFAULT_KEY_PATH "config/secret.key"
+#define ACCOUNTS_FILE_PATH "data/accounts.enc"
+
 #endif

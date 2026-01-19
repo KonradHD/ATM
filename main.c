@@ -97,7 +97,8 @@ int main(void)
     signal(SIGALRM, handle_timeout);
 
     init_atm_money();
-    init_accounts_encrypted();
+    // init_accounts();
+    init_accounts_aes();
 
     while (1)
     { // GŁÓWNA PĘTLA PROGRAMU
@@ -115,7 +116,7 @@ int main(void)
                 exit(0);
             line[strcspn(line, "\n")] = '\0';
 
-            int account_index = validate_card_number(line);
+            int account_index = check_luhn(line, 1);
             if (account_index < 0)
             {
                 printf("Bledny numer karty.\n");

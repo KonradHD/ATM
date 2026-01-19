@@ -5,13 +5,13 @@ CC = gcc
 CFLAGS = -Wall -g
 
 # Biblioteki (-lm dla matematyki, -lpthread dla wątków)
-LIBS = -lm -lpthread
+LIBS = -lm -lpthread -lssl -lcrypto
 
 # Plik wynikowy
 TARGET = main.exe
 
 # Lista plików źródłowych (możesz wpisać ręcznie lub użyć wildcard)
-SRCS = main.c globals.c file_manager.c signal_handlers.c initializers.c validations.c cash_manager.c history.c
+SRCS = main.c globals.c file_manager.c signal_handlers.c initializers.c validations.c cash_manager.c history.c encryption_tools.c
 # Alternatywnie automatycznie wszystkie .c: SRCS = $(wildcard *.c)
 
 # Zamiana .c na .o (pliki obiektowe)

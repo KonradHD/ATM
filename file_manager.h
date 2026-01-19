@@ -3,5 +3,6 @@
 
 void save_state();
 void save_accounts_encrypted();
+void save_accounts_aes();
 
 #endif
