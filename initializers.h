@@ -5,5 +5,6 @@ void init_accounts();
 void init_accounts_encrypted();
 void init_atm_money();
 void xor_cipher(char *, size_t);
+void init_accounts_aes();
 
 #endif

@@ -12,3 +12,6 @@ wszystkim aktualizacja salda i historii - DONE
 - szyfrowanie plików z danymi kont - DONE
 - gdy podano nieprawidłowy pin tworzy się nowy wątek, który będzie blokował podanie pinu do tego samego numeru konta na 30 sekund - DONE
 - po wylogowaniu program nie powinien kończyć działania tylko zapisywać obecny stan kont i dalej kontynuować działanie
+- dodać wczytywanie klucza z pliku konfiguracyjnego -DONE
+- algorytm szyfrowania aes -DONE 
+- algorytm Luhna 

@@ -3,5 +3,6 @@
 
 int validate_pin(const char *, int);
 int validate_card_number(const char *);
+int check_luhn(const char *, int);
 
 #endif

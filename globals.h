@@ -20,5 +20,4 @@ extern int licznik;
 
 extern Cash *atm_money;
 extern Account *tab;
-extern int current_user_index;
 #endif
